@@ -1,0 +1,52 @@
+A chaotic Discord bot featuring targeted censorship, random insults,
+leaderboards, gambling commands, and pure gremlin energy.
+
+- Dynamic user targeting
+- Word censorship system
+- Censorship leaderboard
+- Random insult generator
+- Coin flip & D20 commands
+- Voice channel support
+- Slash command support
+
+/target @user
+/untarget @user
+/censored
+/whoistheproblem
+/insult
+/coinflip
+/d20
+/join
+/leave
+
+AI functionality is currently disabled by default.
+
+To enable:
+1. Add an OpenAI API key to .env
+2. Uncomment the AI command handlers in Bot.js and or deploy-commands.js
+3. Restart the bot
+
+Environment Variables
+into .env file
+
+DISCORD_BOT_TOKEN=your_token_here
+CLIENT_ID=your_client_id_here
+
+
+If uploading to GitHub
+
+
+Before uploading your bot to GitHub:
+
+1. Create a .gitignore file
+2. Add the following:
+
+.env
+node_modules
+
+3. NEVER upload your .env file
+4. NEVER share your Discord bot token
+5. NEVER share API keys publicly
+
+If your token is ever leaked:
+Go to the Discord Developer Portal and reset the bot token immediately.
