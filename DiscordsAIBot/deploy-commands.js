@@ -72,21 +72,7 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
 
-try {
-    console.log('Registering slash commands...');
 
-    await rest.put(
-        Routes.applicationGuildCommands(
-            process.env.CLIENT_ID,
-            '978814303429857384'
-        ),
-        { body: commands }
-    );
-
-    console.log('Slash commands registered!');
-} catch (error) {
-    console.error(error);
-}
 
 try {
     console.log('Registering slash commands...');
