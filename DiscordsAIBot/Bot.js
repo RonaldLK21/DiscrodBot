@@ -5,15 +5,15 @@ import speech from '@google-cloud/speech';
 import textToSpeech from '@google-cloud/text-to-speech';
 import { PassThrough } from 'stream';
 import { Filter } from 'bad-words';
-import OpenAI from 'openai';
+//import OpenAI from 'openai';
 import prism from 'prism-media';
 import fs from 'fs';
 
 
-const openai = new OpenAI({
+/*const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
-
+*/
 const censoredUsers = new Set();
 
 // Create a new Discord client
