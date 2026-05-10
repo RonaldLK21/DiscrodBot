@@ -44,6 +44,15 @@ function updateUserPreferences(userId, key, value) {
     }
 }
 
+function parseReminderTime(timeInput) {
+    const match = timeInput.match(/(\d+)(s|m|h|d)/);
+    if (!match) return null;
+    const amount = parseInt(match[1]);
+    const unit = match[2];
+    const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
+    return amount * (multipliers[unit] || 0);
+}
+
 // Log in the bot
 client.login(process.env.DISCORD_BOT_TOKEN)
     .then(() => console.log('Bot logged in successfully!'))
@@ -230,6 +239,34 @@ if (interaction.commandName === 'insulttarget') {
     );
 }
 
+if (interaction.commandName === 'remindme') {
+
+    const timeInput = interaction.options.getString('time');
+    const reminderMessage = interaction.options.getString('message');
+    const targetUser = interaction.options.getUser('user') || interaction.user;
+    const milliseconds = parseReminderTime(timeInput);
+
+    if (!milliseconds) {
+        return interaction.reply({
+            content: 'Please provide a valid time format (e.g., 10s, 5m, 2h).',
+            ephemeral: true
+        });
+    }
+        if (milliseconds < 10000) {
+            return interaction.reply({
+                content: 'reminder must be at least 1 seconds.',
+                ephemeral: true
+            });
+        }
+        await interaction.reply(
+            ` Reminder set for ${targetUser.username} in **${timeInput}**: ${reminderMessage}`
+        );
+        setTimeout(() => {
+            interaction.channel.send(
+                ` Reminder for ${targetUser}:\n ${reminderMessage}`
+            );
+        }, milliseconds);  
+    }
 });
 
 
@@ -254,7 +291,6 @@ if (message.content === '!' || message.content === '!help') {
 \`!join\` - Join your voice channel
 \`!leave\` - Leave the voice channel
 \`!censored\` - Show censorship leaderboard
-\`!ping\` - Test if bot is alive
     `);
 }
 

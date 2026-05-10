@@ -67,6 +67,28 @@ const commands = [
             .setDescription('The user to insult')
             .setRequired(true)
     ),
+
+    new SlashCommandBuilder()
+        .setName('remindme')
+        .setDescription('Sets a reminder for you or someone else')
+        .addStringOption(option =>
+            option
+                .setName('time')
+                .setDescription(' time like 10s, 5m, 2h')
+                .setRequired(true)
+        )
+        .addStringOption(option =>  
+            option                
+                .setName('message')
+                .setDescription('The reminder message')
+                .setRequired(true)
+        )
+        .addUserOption(option =>
+            option       
+                 .setName('user')
+                .setDescription('The user to remind (optional)')
+                .setRequired(false)
+        ),
 ]
 .map(command => command.toJSON());
 
