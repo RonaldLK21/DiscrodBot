@@ -218,6 +218,18 @@ if (interaction.commandName === 'untarget') {
     );
 }
 
+if (interaction.commandName === 'insulttarget') {
+
+    const user = interaction.options.getUser('user');
+
+    const randomInsult =
+        insults[Math.floor(Math.random() * insults.length)];
+
+    return interaction.reply(
+        `🚨 ${user} ${randomInsult}`
+    );
+}
+
 });
 
 

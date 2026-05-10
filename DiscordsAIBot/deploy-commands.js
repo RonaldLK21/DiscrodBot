@@ -48,16 +48,23 @@ const commands = [
         option
             .setName('user')
             .setDescription('The user to target')
-            .setRequired(true)
-    ),
+            .setRequired(true)),
 
-new SlashCommandBuilder()
-    .setName('untarget')
-    .setDescription('Remove a user from censorship')
-    .addUserOption(option =>
+    new SlashCommandBuilder()
+        .setName('untarget')
+        .setDescription('Remove a user from censorship')
+        .addUserOption(option =>
         option
             .setName('user')
             .setDescription('The user to untarget')
+            .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('insulttarget')
+            .setDescription('Insult a specific user')
+            .addUserOption(option =>
+        option
+            .setName('user')
+            .setDescription('The user to insult')
             .setRequired(true)
     ),
 ]
