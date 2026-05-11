@@ -89,6 +89,27 @@ const commands = [
                 .setDescription('The user to remind (optional)')
                 .setRequired(false)
         ),
+    new SlashCommandBuilder()
+        .setName('poll')
+        .setDescription('Create a poll ')
+        .addStringOption(option =>
+            option
+                .setName('question')
+                .setDescription('The poll question')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+                .setName('options')
+                .setDescription('Comma-separated list of options)')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+        .setName('time')
+        .setDescription('Poll duration like 30s, 5m, 2h')
+        .setRequired(false)
+)
 ]
 .map(command => command.toJSON());
 

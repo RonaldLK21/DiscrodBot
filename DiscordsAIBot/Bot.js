@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits } from 'discord.js';
+import {   Client,GatewayIntentBits,ActionRowBuilder,ButtonBuilder,ButtonStyle} from 'discord.js';
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection, AudioPlayerStatus } from '@discordjs/voice';
 import speech from '@google-cloud/speech';
 import textToSpeech from '@google-cloud/text-to-speech';
@@ -29,6 +29,53 @@ const client = new Client({
 
 const shortTermMemory = new Map();
 const longTermMemory = {};
+
+const polls = new Map();
+function buildPollText(question, options, votes) {
+
+    let text = `📊 **${question}**\n\n`;
+
+    const totalVotes = votes.size;
+
+    options.forEach((option, index) => {
+
+        const voteCount =
+            [...votes.values()]
+            .filter(vote => vote === index).length;
+
+        const percentage =
+            totalVotes === 0
+            ? 0
+            : Math.round((voteCount / totalVotes) * 100);
+
+        const filledBars = Math.round(percentage / 10);
+        const emptyBars = 10 - filledBars;
+
+        const bar =
+            '🟪'.repeat(filledBars) +
+            '⬛'.repeat(emptyBars);
+
+        text +=
+            `**${option}**\n` +
+            `${bar} ${percentage}% (${voteCount} votes)\n\n`;
+    });
+
+    text += `🗳️ Total Votes: ${totalVotes}`;
+
+    return text;
+
+    function disablePollButtons(rows) {
+    return rows.map(row => {
+        const newRow = ActionRowBuilder.from(row);
+
+        newRow.components = newRow.components.map(button =>
+            ButtonBuilder.from(button).setDisabled(true)
+        );
+
+        return newRow;
+    });
+}
+}
 
 // Store user details in long-term memory
 function storeUserDetails(userId, userName) {
@@ -88,7 +135,38 @@ const insults = fs
 
 //interactiom handler
 client.on('interactionCreate', async interaction => {
+     if (interaction.isButton()) {
+        if (!interaction.customId.startsWith('poll_')) return;
+
+        const poll = polls.get(interaction.message.id);
+
+        if (!poll) {
+            return interaction.reply({
+                content: 'This poll is no longer active.',
+                ephemeral: true
+            });
+        }
+
+        const optionIndex = parseInt(interaction.customId.replace('poll_', ''));
+
+        poll.votes.set(interaction.user.id, optionIndex);
+
+        const updatedText = buildPollText(
+            poll.question,
+            poll.options,
+            poll.votes
+        );
+
+        return interaction.update({
+            content: updatedText,
+            components: interaction.message.components
+        });
+    }
+
     if (!interaction.isChatInputCommand()) return;
+
+    // your slash commands continue under here
+
 
     if (interaction.commandName === 'ask') {
         const question = interaction.options.getString('question');
@@ -109,6 +187,9 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply('something not good 😭');
         }
     }
+
+
+    
 
     if (interaction.commandName === 'join') {
         if (!interaction.member.voice.channel) {
@@ -154,7 +235,7 @@ client.on('interactionCreate', async interaction => {
     if (interaction.commandName === 'ping') {
         return interaction.reply('WHAT ????');
     }
-if (interaction.commandName === 'whoistheproblem') {
+    if (interaction.commandName === 'whoistheproblem') {
 
     if (Object.keys(censorCounts).length === 0) {
         return interaction.reply('Nobody is the problem yet 👀');
@@ -177,9 +258,9 @@ if (interaction.commandName === 'whoistheproblem') {
         `🚨 **The Problem User Is:** ${user.username}\n` +
         `💀 Censored ${highestCount} times`
     );
-}
+    }
 
-if (interaction.commandName === 'insult') {
+    if (interaction.commandName === 'insult') {
     const members = await interaction.guild.members.fetch();
 
     const humanMembers = members.filter(member =>
@@ -191,21 +272,21 @@ if (interaction.commandName === 'insult') {
     return interaction.reply(
         `🚨 ${randomMember} ${randomInsult}`
     );
-}
+    }
 
-if (interaction.commandName === 'coinflip') {
+    if (interaction.commandName === 'coinflip') {
     const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
 
     return interaction.reply(`🪙 ${result}!`);
-}
+    }
 
-if (interaction.commandName === 'd20') {
+    if (interaction.commandName === 'd20') {
     const roll = Math.floor(Math.random() * 20) + 1;
 
     return interaction.reply(`🎲 You rolled a **${roll}**!`);
-}
+    }
 
-if (interaction.commandName === 'target') {
+    if (interaction.commandName === 'target') {
 
     const user = interaction.options.getUser('user');
 
@@ -214,9 +295,9 @@ if (interaction.commandName === 'target') {
     return interaction.reply(
         `🚨 ${user.username} is now targeted.`
     );
-}
+    }
 
-if (interaction.commandName === 'untarget') {
+    if (interaction.commandName === 'untarget') {
 
     const user = interaction.options.getUser('user');
 
@@ -225,9 +306,9 @@ if (interaction.commandName === 'untarget') {
     return interaction.reply(
         `✅ ${user.username} has been freed.`
     );
-}
+    }
 
-if (interaction.commandName === 'insulttarget') {
+    if (interaction.commandName === 'insulttarget') {
 
     const user = interaction.options.getUser('user');
 
@@ -237,9 +318,9 @@ if (interaction.commandName === 'insulttarget') {
     return interaction.reply(
         `🚨 ${user} ${randomInsult}`
     );
-}
+    }
 
-if (interaction.commandName === 'remindme') {
+    if (interaction.commandName === 'remindme') {
 
     const timeInput = interaction.options.getString('time');
     const reminderMessage = interaction.options.getString('message');
@@ -267,6 +348,97 @@ if (interaction.commandName === 'remindme') {
             );
         }, milliseconds);  
     }
+
+if (interaction.commandName === 'poll') {
+    const timeInput = interaction.options.getString('time');
+    const milliseconds = timeInput ? parseReminderTime(timeInput) : null;
+
+    if (timeInput && !milliseconds) {
+        return interaction.reply({
+            content: 'Please provide a valid time format for the poll duration (e.g., 30s, 5m, 2h).',
+            ephemeral: true
+        });
+    }
+
+    const question = interaction.options.getString('question');
+    const rawOptions = interaction.options.getString('options');
+
+    const options = rawOptions
+        .split(',')
+        .map(opt => opt.trim())
+        .filter(opt => opt.length > 0);
+
+    if (options.length < 2) {
+        return interaction.reply({
+            content: 'Please provide at least 2 options for the poll.',
+            ephemeral: true
+        });
+    }
+
+    if (options.length > 10) {
+        return interaction.reply({
+            content: 'Please provide no more than 10 options for the poll.',
+            ephemeral: true
+        });
+    }
+
+    const votes = new Map();
+    const pollText = buildPollText(question, options, votes);
+    const rows = [];
+
+    for (let i = 0; i < options.length; i += 5) {
+        const row = new ActionRowBuilder();
+
+        options.slice(i, i + 5).forEach((option, index) => {
+            row.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`poll_${i + index}`)
+                    .setLabel(option)
+                    .setStyle(ButtonStyle.Primary)
+            );
+        });
+
+        rows.push(row);
+    }
+
+    const pollMessage = await interaction.reply({
+        content: pollText,
+        components: rows,
+        fetchReply: true
+    });
+
+    polls.set(pollMessage.id, { question, options, votes });
+
+   if (milliseconds) {
+    setTimeout(async () => {
+        const poll = polls.get(pollMessage.id);
+
+        if (!poll) return;
+
+        const finalText =
+            buildPollText(poll.question, poll.options, poll.votes) +
+            `\n\n🔒 **Poll closed!**`;
+
+        try {
+            const messageToEdit = await interaction.channel.messages.fetch(pollMessage.id);
+
+            await messageToEdit.edit({
+                content: finalText,
+                components: []
+            });
+
+            polls.delete(pollMessage.id);
+        } catch (error) {
+            console.error('Failed to close poll:', error);
+        }
+    }, milliseconds);
+}
+
+    return;
+}
+
+
+    
 });
 
 
@@ -295,7 +467,7 @@ if (message.content === '!' || message.content === '!help') {
 }
 
 
-    // Troll version Make sure to add ID
+    // Troll version 
     
 
     
